@@ -1,0 +1,26 @@
+---
+- name: Oracle Altyapı Hazırlık Playbook'u
+  hosts: localhost
+  connection: local
+  become: yes
+
+  tasks:
+    - name: oinstall grubunu oluştur
+      group:
+        name: oinstall
+        state: present
+
+    - name: oracle kullanıcısını oluştur
+      user:
+        name: oracle
+        group: oinstall
+        shell: /bin/bash
+        comment: "Oracle Database Owner"
+
+    - name: Gerekli klasörü oluştur
+      file:
+        path: /u01/app/oracle
+        state: directory
+        owner: oracle
+        group: oinstall
+        mode: '0755'
