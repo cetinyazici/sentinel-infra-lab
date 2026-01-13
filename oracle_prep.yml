@@ -1,26 +1,43 @@
 ---
-- name: Oracle Altyapı Hazırlık Playbook'u
+- name: Oracle Altyapı ve Sistem Ayarları
   hosts: localhost
   connection: local
   become: yes
 
   tasks:
-    - name: oinstall grubunu oluştur
-      group:
-        name: oinstall
+    - name: Oracle için gerekli sistem paketlerini kur
+      dnf:
+        name:
+          - binutils
+          - gcc
+          - gcc-c++
+          - glibc
+          - glibc-devel
+          - ksh
+          - libaio
+          - libaio-devel
+          - libgcc
+          - libstdc++
+          - libstdc++-devel
+          - make
+          - sysstat
+          - compat-openssl11 # Oracle 19c/21c için kritik
         state: present
 
-    - name: oracle kullanıcısını oluştur
-      user:
-        name: oracle
-        group: oinstall
-        shell: /bin/bash
-        comment: "Oracle Database Owner"
+    - name: Oracle kullanıcısı için sistem limitlerini ayarla
+      pam_limits:
+        domain: oracle
+        limit_type: "{{ item.type }}"
+        limit_item: "{{ item.item }}"
+        value: "{{ item.value }}"
+      with_items:
+        - { type: 'soft', item: 'nofile', value: '1024' }
+        - { type: 'hard', item: 'nofile', value: '65536' }
+        - { type: 'soft', item: 'nproc', value: '2047' }
+        - { type: 'hard', item: 'nproc', value: '16384' }
+        - { type: 'soft', item: 'stack', value: '10240' }
+        - { type: 'hard', item: 'stack', value: '32768' }
 
-    - name: Gerekli klasörü oluştur
-      file:
-        path: /u01/app/oracle
-        state: directory
-        owner: oracle
-        group: oinstall
-        mode: '0755'
+    - name: SELinux'u kapat (Oracle kurulumu kolaylığı için)
+      selinux:
+        state: disabled
