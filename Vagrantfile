@@ -1,7 +1,7 @@
 Vagrant.configure("2") do |config|
   # Daha stabil olan "generic/rocky9" kutusunu kullanıyoruz
   config.vm.box = "generic/rocky9"
-  
+  config.vm.synced_folder ".", "/vagrant", type: "virtualbox", owner: "vagrant", group: "vagrant"
   config.vm.define "sentinel-server" do |node|
     node.vm.hostname = "sentinel-server"
     node.vm.provider "virtualbox" do |vb|
